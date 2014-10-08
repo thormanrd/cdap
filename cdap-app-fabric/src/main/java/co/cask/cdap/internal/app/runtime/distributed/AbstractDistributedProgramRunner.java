@@ -182,7 +182,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner 
 
     // Decode the adapter spec from program system argument
     AdapterDefinition adapterSpec = GSON.fromJson(arguments.getOption(ProgramOptionConstants.ADAPTER_SPEC),
-                                                     AdapterDefinition.class);
+                                                  AdapterDefinition.class);
 
     // Get all unique PluginInfo from the adapter spec
     Set<PluginInfo> plugins = adapterSpec.getPluginInfos();
@@ -197,7 +197,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner 
                                       adapterSpec.getTemplate());
 
     String localizePrefix = templateDir.getName() + "/" +
-                            templateDir.toURI().relativize(templatePluginDir.toURI()).getPath();
+      templateDir.toURI().relativize(templatePluginDir.toURI()).getPath();
 
     // Localize all required plugin jars and maintain the template plugin directory structure
     // The AbstractProgramTwillRunnable will set the APP_TEMPLATE_DIR correspondingly.

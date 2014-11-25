@@ -1,0 +1,3 @@
+[submodule "cdap-web-app"]
+	path = cdap-web-app
+	url = https://github.com/caskdata/cdap-ui.git

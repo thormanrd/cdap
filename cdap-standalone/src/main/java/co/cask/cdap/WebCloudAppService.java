@@ -62,7 +62,7 @@ final class WebCloudAppService extends AbstractExecutionThreadService {
       LOG.warn("Unable to determine web-app directory");
     }
     WEB_APP_BASE = base;
-    WEB_APP = new File(new File(new File(base, "server"), "local"), "main.js").getAbsolutePath();
+    WEB_APP = new File(base, "server.js").getAbsolutePath();
   }
 
   private final File webAppBase;
@@ -80,7 +80,7 @@ final class WebCloudAppService extends AbstractExecutionThreadService {
                                 "webAppPath file does not exist: " + this.webAppPath.getAbsolutePath());
     // This is ok since this class is only used in standalone, the path is always [base]/server/local/main.js
     // However, this could change if the layer of web-app changed, which require adjustment to this class anyway
-    this.webAppBase = this.webAppPath.getParentFile().getParentFile().getParentFile();
+    this.webAppBase = this.webAppPath.getParentFile();
     this.cConf = cConf;
     this.sConf = sConf;
   }

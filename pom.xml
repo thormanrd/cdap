@@ -1267,6 +1267,7 @@
               <configuration>
                 <excludes>
                   <exclude>build-number.txt</exclude>
+                  <exclude>.gitmodules</exclude>
                   <exclude>LICENSE*.txt</exclude>
                   <exclude>*.rst</exclude>
                   <exclude>*.md</exclude>

@@ -27,6 +27,7 @@ import co.cask.cdap.api.mapreduce.MapReduceSpecification;
 import co.cask.cdap.api.procedure.ProcedureSpecification;
 import co.cask.cdap.api.service.ServiceSpecification;
 import co.cask.cdap.api.service.ServiceWorkerSpecification;
+import co.cask.cdap.api.spark.SparkSpecification;
 import co.cask.cdap.api.workflow.WorkflowSpecification;
 import co.cask.cdap.app.ApplicationSpecification;
 import co.cask.cdap.app.deploy.Manager;
@@ -81,6 +82,7 @@ import co.cask.cdap.proto.ProgramRunStatus;
 import co.cask.cdap.proto.ProgramStatus;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.ProgramTypes;
+import co.cask.cdap.proto.RunRecord;
 import co.cask.cdap.proto.StreamRecord;
 import co.cask.http.BodyConsumer;
 import co.cask.http.ChunkResponder;
@@ -405,6 +407,67 @@ public class AppFabricHttpHandler extends AbstractAppFabricHttpHandler {
   public void resetTxManagerState(HttpRequest request, HttpResponder responder) {
     txClient.resetState();
     responder.sendStatus(HttpResponseStatus.OK);
+  }
+
+
+  @GET
+  //TODO: This is not status but need to rename
+  @Path("/apps/{app-id}/status")
+  public void getAppRuntimeStats(HttpRequest request, HttpResponder responder,
+                                 @PathParam("app-id") String appId) {
+
+    List<ProgramRunTimeStatus> result = Lists.newArrayList();
+
+    // For an app
+    try {
+      String accountId = getAuthenticatedAccountId(request);
+      Id.Application id  = Id.Application.from(accountId, appId);
+      ApplicationSpecification spec = store.getApplication(id);
+
+      for (Map.Entry<String, FlowSpecification> entry : spec.getFlows().entrySet()) {
+        Id.Program program = Id.Program.from(accountId, appId, entry.getKey());
+        result.add(getRuntimeStatus(program, ProgramType.FLOW));
+      }
+
+      for (Map.Entry<String, MapReduceSpecification> entry : spec.getMapReduce().entrySet()) {
+        Id.Program program = Id.Program.from(accountId, appId, entry.getKey());
+        result.add(getRuntimeStatus(program, ProgramType.MAPREDUCE));
+      }
+
+      for (Map.Entry<String, ServiceSpecification> entry : spec.getServices().entrySet()) {
+        Id.Program program = Id.Program.from(accountId, appId, entry.getKey());
+        result.add(getRuntimeStatus(program, ProgramType.SERVICE));
+      }
+
+      for (Map.Entry<String, WorkflowSpecification> entry : spec.getWorkflows().entrySet()) {
+        Id.Program program = Id.Program.from(accountId, appId, entry.getKey());
+        result.add(getRuntimeStatus(program, ProgramType.WORKFLOW));
+      }
+
+      for (Map.Entry<String, SparkSpecification> entry : spec.getSpark().entrySet()) {
+        Id.Program program = Id.Program.from(accountId, appId, entry.getKey());
+        result.add(getRuntimeStatus(program, ProgramType.SPARK));
+      }
+
+      responder.sendJson(HttpResponseStatus.OK, result);
+
+    }  catch (SecurityException e) {
+      responder.sendStatus(HttpResponseStatus.UNAUTHORIZED);
+    } catch (Throwable e) {
+      LOG.error("Got exception:", e);
+      responder.sendStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private ProgramRunTimeStatus getRuntimeStatus(Id.Program id, ProgramType type) throws OperationException {
+    ProgramController.State programState = getProgramState(id, type);
+    List<RunRecord> runs = store.getRuns(id, ProgramRunStatus.COMPLETED, Long.MIN_VALUE, Long.MAX_VALUE, 1);
+    if (runs.size() >=1 ) {
+      return new ProgramRunTimeStatus(type, id.getId(), programState.toString(),
+                                      runs.get(0).getStartTs(), runs.get(0).getStopTs());
+    } else {
+      return new ProgramRunTimeStatus(type, id.getId(), programState.toString());
+    }
   }
 
   /**
@@ -2392,6 +2455,18 @@ public class AppFabricHttpHandler extends AbstractAppFabricHttpHandler {
     return false;
   }
 
+
+  private ProgramController.State getProgramState(Id.Program program, ProgramType type) {
+    for (Map.Entry<RunId, ProgramRuntimeService.RuntimeInfo> entry : runtimeService.list(type).entrySet()) {
+      ProgramController.State programState = entry.getValue().getController().getState();
+      Id.Program programId = entry.getValue().getProgramId();
+      if (programId.equals(program)) {
+        return programState;
+      }
+    }
+    return ProgramController.State.STOPPED;
+  }
+
   /**
    * Delete the jar location of the program.
    *
@@ -3362,4 +3437,27 @@ public class AppFabricHttpHandler extends AbstractAppFabricHttpHandler {
       this.status = status;
     }
   }
+
+  private class ProgramRunTimeStatus {
+
+    private final ProgramType type;
+    private final String name;
+    private final String status;
+    private final long lastStartTime;
+    private final long lastStopTime;
+
+    private ProgramRunTimeStatus(ProgramType type, String name, String status) {
+      this(type, name, status, 0L, 0L);
+    }
+
+    private ProgramRunTimeStatus(ProgramType type, String name, String status,
+                                 long lastStartTime, long lastStopTime) {
+      this.type = type;
+      this.name = name;
+      this.status = status;
+      this.lastStartTime = lastStartTime;
+      this.lastStopTime = lastStopTime;
+    }
+  }
+
 }

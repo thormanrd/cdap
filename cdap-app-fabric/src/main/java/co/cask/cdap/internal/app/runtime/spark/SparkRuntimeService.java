@@ -68,6 +68,9 @@ final class SparkRuntimeService extends AbstractExecutionThreadService {
 
   static final String SPARK_HCONF_FILENAME = "spark_hconf.xml";
   private static final Logger LOG = LoggerFactory.getLogger(SparkRuntimeService.class);
+  
+  // DO NOT REMOVE IT. It's for Twill to find the dependency.
+  private SparkMetricsSink sink;
 
   private final CConfiguration cConf;
   private final Configuration hConf;
@@ -165,6 +168,14 @@ final class SparkRuntimeService extends AbstractExecutionThreadService {
       // With this, the user Spark program can run, but it cannot use library of different version that CDAP
       // depends on.
       Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+
+//      URLClassLoader urlcl = (URLClassLoader) getClass().getClassLoader();
+//      URL[] urls = urlcl.getURLs();
+//
+//      for (URL url : urls) {
+//        System.out.println("Url: " + url);
+//      }
+        
       try {
         SparkProgramWrapper.setBasicSparkContext(context);
         SparkProgramWrapper.setSparkProgramRunning(true);
@@ -317,6 +328,17 @@ final class SparkRuntimeService extends AbstractExecutionThreadService {
         }
       }
     }
+
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    if (classLoader instanceof URLClassLoader) {
+      for (URL url : ((URLClassLoader) classLoader).getURLs()) {
+        File file = new File(url.toURI()).getAbsoluteFile();
+        if (file.isFile() && file.getName().endsWith(".jar")) {
+          jars.add(file.getAbsolutePath());
+        }
+      }
+    }
+
 
     String mode = conf.get(MRConfig.FRAMEWORK_NAME).equalsIgnoreCase("local") ?
       conf.get(MRConfig.FRAMEWORK_NAME) : "yarn-client";

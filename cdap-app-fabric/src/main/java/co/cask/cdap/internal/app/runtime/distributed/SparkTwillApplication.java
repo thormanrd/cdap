@@ -17,14 +17,24 @@ package co.cask.cdap.internal.app.runtime.distributed;
 
 import co.cask.cdap.api.spark.SparkSpecification;
 import co.cask.cdap.app.program.Program;
+import co.cask.cdap.internal.app.runtime.spark.metrics.SparkMetricsSink;
 import co.cask.cdap.proto.ProgramType;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.twill.api.EventHandler;
 import org.apache.twill.api.ResourceSpecification;
 import org.apache.twill.api.TwillApplication;
 import org.apache.twill.api.TwillSpecification;
 import org.apache.twill.filesystem.Location;
+import org.apache.twill.internal.ApplicationBundler;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Set;
 
 /**
  * {@link TwillApplication} to run {@link MapReduceTwillRunnable}
@@ -32,7 +42,7 @@ import java.io.File;
 public final class SparkTwillApplication implements TwillApplication {
 
   static final File SPARK_JAR_FILE =
-                        new File ("/usr/lib/spark/lib/spark-assembly-1.2.0-cdh5.3.0-hadoop2.5.0-cdh5.3.0.jar");
+    new File("/usr/lib/spark/lib/spark-assembly-1.2.0-cdh5.3.0-hadoop2.5.0-cdh5.3.0.jar");
 
   private final SparkSpecification spec;
   private final Program program;

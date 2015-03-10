@@ -20,7 +20,7 @@ echo "├┄ deleting and recreating target path..."
 mkdir -p ${TARGET_PATH}
 
 echo "├┄ ensuring global dependencies are present..."
-npm install -g bower gulp &>/dev/null || die "installing global dependencies"
+#npm install -g bower gulp &>/dev/null || die "installing global dependencies"
 
 echo "├┄ cleaning house in ${UI_PATH}..."
 cd ${UI_PATH}
@@ -29,11 +29,11 @@ cd ${UI_PATH}
 
 echo "├┄ fetching dependencies... it may take a while..."
 npm install &>/dev/null || die "running \"npm install\""
-bower install --config.interactive=false &>/dev/null || die "running \"bower install\""
+./node_modules/bower/bin/bower install --config.interactive=false &>/dev/null || die "running \"bower install\""
 
 echo "├┄ making a fresh dist..."
-gulp clean &>/dev/null || die "running \"gulp clean\""
-gulp distribute &>/dev/null || die "running \"gulp distribute\""
+./node_modules/gulp/bin/gulp.js clean &>/dev/null || die "running \"gulp clean\""
+./node_modules/gulp/bin/gulp.js distribute &>/dev/null || die "running \"gulp distribute\""
 
 echo "├┄ copying relevant files to the target..."
 cp package.json ${TARGET_PATH}

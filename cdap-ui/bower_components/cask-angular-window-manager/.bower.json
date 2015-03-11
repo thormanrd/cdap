@@ -1,0 +1,37 @@
+{
+  "name": "cask-angular-window-manager",
+  "main": [
+    "module.js",
+    "wm.js"
+  ],
+  "version": "0.0.2",
+  "description": "events and directives to work with the browser window",
+  "keywords": [
+    "page visibility",
+    "window resize",
+    "cask",
+    "angular-directive",
+    "angular-service"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.x"
+  },
+  "_cacheHeaders": {
+    "ETag": "\"99d5371bc158fb9e8715dd6077191014c3c14f48\"",
+    "Content-Length": "1629",
+    "Content-Type": "application/zip"
+  },
+  "_release": "e-tag:99d5371bc",
+  "_source": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-window-manager.zip?raw=true",
+  "_target": "*",
+  "_originalSource": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-window-manager.zip?raw=true"
+}

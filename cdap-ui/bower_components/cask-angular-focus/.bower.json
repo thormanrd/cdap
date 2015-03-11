@@ -1,0 +1,38 @@
+{
+  "name": "cask-angular-focus",
+  "main": [
+    "module.js",
+    "focus.js",
+    "focus-service.js"
+  ],
+  "version": "0.0.2",
+  "description": "A service + directive to focus a form element in angular",
+  "keywords": [
+    "focus",
+    "form",
+    "cask",
+    "angular-directive",
+    "angular-service"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.x"
+  },
+  "_cacheHeaders": {
+    "ETag": "\"ad68254032f2c38742bb8080fcba806a544e14de\"",
+    "Content-Length": "1603",
+    "Content-Type": "application/zip"
+  },
+  "_release": "e-tag:ad6825403",
+  "_source": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-focus.zip?raw=true",
+  "_target": "*",
+  "_originalSource": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-focus.zip?raw=true"
+}

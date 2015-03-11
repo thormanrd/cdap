@@ -1,0 +1,26 @@
+{
+  "name": "cask-angular-capitalize",
+  "main": [
+    "module.js",
+    "capitalize.js"
+  ],
+  "version": "0.0.1",
+  "description": "Capitalize filter which lets you capitalize string",
+  "keywords": [
+    "capitalize",
+    "cask",
+    "angular-filter"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.x"
+  }
+}

@@ -1,0 +1,18 @@
+table[cask-sortable] th {
+  text-transform: capitalize;
+  user-select: none;
+  white-space: nowrap;
+}
+table[cask-sortable] th > i {
+  visibility: hidden;
+  margin-left: 10px;
+}
+table[cask-sortable] tr.sort-enabled th {
+  cursor: pointer;
+}
+table[cask-sortable] tr.sort-enabled th.predicate > i {
+  visibility: visible;
+}
+table[cask-sortable] tr.sort-enabled th:hover {
+  background-color: lightyellow;
+}

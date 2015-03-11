@@ -1,0 +1,36 @@
+{
+  "name": "cask-angular-json-edit",
+  "main": [
+    "module.js",
+    "jsonedit.js",
+    "jsonedit.css"
+  ],
+  "version": "0.0.1",
+  "description": "A debug directive you through in your model here in a text area and I don't know what it does.",
+  "keywords": [
+    "jsonedit",
+    "cask",
+    "angular-directive"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.x"
+  },
+  "_cacheHeaders": {
+    "ETag": "\"f2b0a5b7cf3ab39a4844713882014fb0296dec7b\"",
+    "Content-Length": "1523",
+    "Content-Type": "application/zip"
+  },
+  "_release": "e-tag:f2b0a5b7c",
+  "_source": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-json-edit.zip?raw=true",
+  "_target": "*",
+  "_originalSource": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-json-edit.zip?raw=true"
+}

@@ -1,0 +1,35 @@
+{
+  "name": "cask-angular-theme",
+  "main": [
+    "module.js",
+    "theme.js"
+  ],
+  "version": "0.0.1",
+  "description": "A service to manage body.theme-* CSS classes",
+  "keywords": [
+    "cask",
+    "angular-directive"
+  ],
+  "license": "Apache",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.x",
+    "ngstorage": ">=0.3.0"
+  },
+  "_cacheHeaders": {
+    "ETag": "\"9f1a85d8fcd13cb5acaf4ef0e60c4ccae8d66182\"",
+    "Content-Length": "1031",
+    "Content-Type": "application/zip"
+  },
+  "_release": "e-tag:9f1a85d8f",
+  "_source": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-theme.zip?raw=true",
+  "_target": "*",
+  "_originalSource": "https://github.com/caskdata/ng-capsules/blob/develop/zip/cask-angular-theme.zip?raw=true"
+}

@@ -72,6 +72,8 @@ import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.gson.Gson;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -82,6 +84,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.ColumnDescriptor;
@@ -220,6 +223,7 @@ public abstract class BaseHiveExploreService extends AbstractIdleService impleme
     // Read delegation token if security is enabled.
     if (ShimLoader.getHadoopShims().isSecurityEnabled()) {
       conf.set(HIVE_METASTORE_TOKEN_KEY, HiveAuthFactory.HS2_CLIENT_TOKEN);
+      System.setProperty(HIVE_METASTORE_TOKEN_KEY, HiveAuthFactory.HS2_CLIENT_TOKEN);
 
       // mapreduce.job.credentials.binary is added by Hive only if Kerberos credentials are present and impersonation
       // is enabled. However, in our case we don't have Kerberos credentials for Explore service.
@@ -272,7 +276,11 @@ public abstract class BaseHiveExploreService extends AbstractIdleService impleme
   protected void startUp() throws Exception {
     LOG.info("Starting {}...", BaseHiveExploreService.class.getSimpleName());
 
+    System.setProperty(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION, "simple");
+    System.setProperty("sun.security.krb5.debug", "true");
     cliService.init(getHiveConf());
+    System.clearProperty(CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION);
+
     cliService.start();
 
     metastoreClientsExecutorService.scheduleWithFixedDelay(

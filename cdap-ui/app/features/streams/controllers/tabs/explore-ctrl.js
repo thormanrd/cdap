@@ -1,9 +1,11 @@
 angular.module(PKG.name + '.feature.streams')
   .controller('CdapStreamExploreController',
-    function($scope, MyDataSource, $state, myHelpers, $log) {
+    function($scope, MyDataSource, $state, myHelpers, $log, myExplorerApi) {
 
       var dataSrc = new MyDataSource($scope);
-
+      var params = {
+        scope: $scope
+      };
       $scope.activePanel = 0;
 
 
@@ -32,32 +34,27 @@ angular.module(PKG.name + '.feature.streams')
       $scope.doEventSearch();
 
 
-      $scope.query = 'SELECT * FROM history LIMIT 5';
+      $scope.query = 'SELECT * FROM dataset_history LIMIT 5';
 
       $scope.execute = function() {
-        dataSrc
-          .request({
-            _cdapNsPath: '/data/explore/queries',
-            method: 'POST',
-            body: {
-              query: $scope.query
-            }
-          })
-          .then(function () {
+        var prom = myExplorerApi.execute(params, {
+          'body': {
+            query: $scope.query
+          }
+        });
+        prom.$promise.then(function(res) {
+            console.log("Executed");
             $scope.getQueries();
             $scope.activePanel = 2;
-          });
+        });
       };
 
       $scope.queries = [];
 
       $scope.getQueries = function() {
-        dataSrc
-          .request({
-            _cdapNsPath: '/data/explore/queries',
-            method: 'GET'
-          })
-          .then(function (queries) {
+        console.log("Get Queries");
+        myExplorerApi.get(params)
+          .$promise.then(function(queries) {
             $scope.queries = queries;
           });
       };
@@ -68,30 +65,25 @@ angular.module(PKG.name + '.feature.streams')
 
       $scope.fetchResult = function(query) {
         $scope.responses.request = query;
-
         // request schema
-        dataSrc
-          .request({
-            _cdapPath: '/data/explore/queries/' +
-                          query.query_handle + '/schema'
-          })
-          .then(function (result) {
+        console.log("Get Schema");
+        myExplorerApi.fetchResults(angular.extend({queryHandle: query.query_handle}, params))
+          .$promise.then(function(result) {
+            console.log("Get Schema Success!");
             $scope.responses.schema = result;
-          });
-
-        // request preview
-        dataSrc
-          .request({
-            _cdapPath: '/data/explore/queries/' +
-                          query.query_handle + '/preview',
-            method: 'POST'
           })
-          .then(function (result) {
+
+        console.log("Get Preview");
+        // request preview
+        myExplorerApi.queryPreview(angular.extend({queryHandle: query.query_handle}, params), {})
+          .$promise.then(function(result) {
+            console.log("Get Preview Success!");
             $scope.responses.results = result;
-          });
+          })
       };
 
       $scope.download = function(query) {
+
         dataSrc
           .request({
             _cdapPath: '/data/explore/queries/' +

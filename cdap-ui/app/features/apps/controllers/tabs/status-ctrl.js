@@ -31,6 +31,7 @@ angular.module(PKG.name + '.feature.apps')
                         programId + '/status'
         },
         function (res) {
+          debugger;
           var program = $scope.programs.filter(function(item) {
             return item.name === programId;
           });

@@ -49,7 +49,7 @@ public final class DistributedSparkProgramRunner extends AbstractDistributedProg
   protected ProgramController launch(Program program, ProgramOptions options,
                                      File hConfFile, File cConfFile, ApplicationLauncher launcher) {
     // Extract and verify parameters
-    ApplicationSpecification appSpec = program.getSpecification();
+    ApplicationSpecification appSpec = program.getApplicationSpecification();
     Preconditions.checkNotNull(appSpec, "Missing application specification.");
 
     ProgramType processorType = program.getType();

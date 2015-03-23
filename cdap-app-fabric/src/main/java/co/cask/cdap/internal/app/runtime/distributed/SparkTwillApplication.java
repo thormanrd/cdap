@@ -74,8 +74,8 @@ public final class SparkTwillApplication implements TwillApplication {
 
     return TwillSpecification.Builder.with()
       .setName(String.format("%s.%s.%s.%s",
-                             ProgramType.SPARK.name().toLowerCase(),
-                             program.getAccountId(), program.getApplicationId(), spec.getName()))
+                             ProgramType.MAPREDUCE.name().toLowerCase(),
+                             program.getNamespaceId(), program.getApplicationId(), spec.getName()))
       .withRunnable()
       .add(spec.getName(),
            new SparkTwillRunnable(spec.getName(), "hConf.xml", "cConf.xml"),

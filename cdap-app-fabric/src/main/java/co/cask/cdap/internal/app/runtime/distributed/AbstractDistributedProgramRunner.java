@@ -156,7 +156,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner 
             .addLogHandler(new PrinterLogHandler(new PrintWriter(System.out)))
             .addSecureStore(YarnSecureStore.create(HBaseTokenUtils.obtainToken(hConf, new Credentials())))
             .withClassPaths(twillApplication instanceof SparkTwillApplication ?
-                              "/usr/lib/spark/assembly/lib/spark-assembly-1.0.0-cdh5.1.3-hadoop2.3.0-cdh5.1.3.jar" : "")
+                              SparkTwillApplication.SPARK_JAR_FILE.getName() : "")
             .withApplicationArguments(
               String.format("--%s", RunnableOptions.JAR), copiedProgram.getJarLocation().getName(),
               String.format("--%s", RunnableOptions.PROGRAM_OPTIONS), programOptions
@@ -182,7 +182,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner 
 
     // Decode the adapter spec from program system argument
     AdapterDefinition adapterSpec = GSON.fromJson(arguments.getOption(ProgramOptionConstants.ADAPTER_SPEC),
-                                                  AdapterDefinition.class);
+                                                     AdapterDefinition.class);
 
     // Get all unique PluginInfo from the adapter spec
     Set<PluginInfo> plugins = adapterSpec.getPluginInfos();
@@ -197,7 +197,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner 
                                       adapterSpec.getTemplate());
 
     String localizePrefix = templateDir.getName() + "/" +
-      templateDir.toURI().relativize(templatePluginDir.toURI()).getPath();
+                            templateDir.toURI().relativize(templatePluginDir.toURI()).getPath();
 
     // Localize all required plugin jars and maintain the template plugin directory structure
     // The AbstractProgramTwillRunnable will set the APP_TEMPLATE_DIR correspondingly.

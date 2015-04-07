@@ -1,5 +1,6 @@
 @import "../../variables.less";
 @import "../../../../bower_components/bootstrap/less/mixins.less";
+@import "mixins.less";
 
 body.theme-cdap {
 
@@ -225,7 +226,7 @@ body.theme-cdap {
     .modal-header {
       border-bottom: 0;
       .btn, button {
-        .cask-btn(@color: @cdap-header, @background: white, @border: 0, @border-radius: 16px, @font-size: 24px, @padding: 5px 10px);
+        .cask-btn(@color: @cdap-header, @background: white, @border: 0, @border-radius: 16px, @padding: 5px 10px);
         line-height: 1;
         opacity: 1;
       }

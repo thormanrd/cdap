@@ -25,11 +25,11 @@ import co.cask.cdap.app.runtime.ProgramRuntimeService;
 import co.cask.cdap.app.store.Store;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.exception.NamespaceCannotBeDeletedException;
 import co.cask.cdap.common.exception.NotFoundException;
 import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.config.PreferencesStore;
 import co.cask.cdap.internal.app.namespace.NamespaceAdmin;
-import co.cask.cdap.internal.app.namespace.NamespaceCannotBeDeletedException;
 import co.cask.cdap.internal.app.runtime.ProgramOptionConstants;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.ProgramRunStatus;
@@ -69,7 +69,7 @@ public abstract class SchedulerTestBase {
   private static final SchedulableProgramType PROGRAM_TYPE = SchedulableProgramType.WORKFLOW;
   private static final Id.Stream STREAM_ID = Id.Stream.from(Constants.DEFAULT_NAMESPACE_ID, "stream");
   private static final Schedule UPDATE_SCHEDULE_2 =
-    Schedules.createDataSchedule(SCHEDULE_NAME_2, "Every 1M", Schedules.Source.STREAM, STREAM_ID.getName(), 1);
+    Schedules.createDataSchedule(SCHEDULE_NAME_2, "Every 1M", Schedules.Source.STREAM, STREAM_ID.getId(), 1);
 
   protected interface StreamMetricsPublisher {
     void increment(long size) throws Exception;
@@ -105,7 +105,7 @@ public abstract class SchedulerTestBase {
                         streamSizeScheduler.scheduleState(PROGRAM_ID, PROGRAM_TYPE, SCHEDULE_NAME_1));
     Assert.assertEquals(Scheduler.ScheduleState.SCHEDULED,
                         streamSizeScheduler.scheduleState(PROGRAM_ID, PROGRAM_TYPE, SCHEDULE_NAME_2));
-    int runs = store.getRuns(PROGRAM_ID, ProgramRunStatus.ALL, Long.MIN_VALUE, Long.MAX_VALUE, 100).size();
+    int runs = store.getRuns(PROGRAM_ID, ProgramRunStatus.ALL, 0, Long.MAX_VALUE, 100).size();
     Assert.assertEquals(0, runs);
 
     StreamMetricsPublisher metricsPublisher = createMetricsPublisher(STREAM_ID);
@@ -178,7 +178,7 @@ public abstract class SchedulerTestBase {
     Tasks.waitFor(expectedRuns, new Callable<Integer>() {
       @Override
       public Integer call() throws Exception {
-        return store.getRuns(programId, ProgramRunStatus.COMPLETED, Long.MIN_VALUE, Long.MAX_VALUE, 100).size();
+        return store.getRuns(programId, ProgramRunStatus.COMPLETED, 0, Long.MAX_VALUE, 100).size();
       }
     }, timeoutSeconds, TimeUnit.SECONDS, 50, TimeUnit.MILLISECONDS);
   }

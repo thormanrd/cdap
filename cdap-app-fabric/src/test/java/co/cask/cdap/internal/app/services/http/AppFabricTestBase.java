@@ -28,11 +28,13 @@ import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.data.stream.service.StreamService;
 import co.cask.cdap.data2.datafabric.dataset.service.DatasetService;
 import co.cask.cdap.data2.datafabric.dataset.service.executor.DatasetOpExecutor;
+import co.cask.cdap.data2.transaction.stream.StreamAdmin;
 import co.cask.cdap.internal.app.services.AppFabricServer;
 import co.cask.cdap.metrics.query.MetricsQueryService;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.NamespaceMeta;
 import co.cask.cdap.proto.ProgramType;
+import co.cask.cdap.proto.RunRecord;
 import co.cask.cdap.test.internal.guice.AppFabricTestModule;
 import co.cask.tephra.TransactionManager;
 import co.cask.tephra.TransactionSystemClient;
@@ -103,6 +105,7 @@ public abstract class AppFabricTestBase {
 
   protected static final Type MAP_STRING_STRING_TYPE = new TypeToken<Map<String, String>>() { }.getType();
   protected static final Type LIST_MAP_STRING_STRING_TYPE = new TypeToken<List<Map<String, String>>>() { }.getType();
+  protected static final Type LIST_RUNRECORD_TYPE = new TypeToken<List<RunRecord>>() { }.getType();
 
   protected static final String TEST_NAMESPACE1 = "testnamespace1";
   protected static final NamespaceMeta TEST_NAMESPACE_META1 = new NamespaceMeta.Builder()
@@ -129,6 +132,7 @@ public abstract class AppFabricTestBase {
   private static DatasetService datasetService;
   private static TransactionSystemClient txClient;
   private static StreamService streamService;
+  private static StreamAdmin streamAdmin;
   private static ServiceStore serviceStore;
 
   private static final String adapterFolder = "adapter";
@@ -174,6 +178,7 @@ public abstract class AppFabricTestBase {
     streamService.startAndWait();
     serviceStore = injector.getInstance(ServiceStore.class);
     serviceStore.startAndWait();
+    streamAdmin = injector.getInstance(StreamAdmin.class);
 
     createNamespaces();
   }
@@ -183,11 +188,11 @@ public abstract class AppFabricTestBase {
     deleteNamespaces();
     streamService.stopAndWait();
     appFabricServer.stopAndWait();
+    metricsCollectionService.stopAndWait();
     metricsService.stopAndWait();
     datasetService.stopAndWait();
     dsOpService.stopAndWait();
     txManager.stopAndWait();
-    metricsCollectionService.stopAndWait();
   }
 
   protected String getAPIVersion() {
@@ -319,22 +324,30 @@ public abstract class AppFabricTestBase {
   }
 
   protected HttpResponse deploy(Class<?> application, @Nullable String appName) throws Exception {
-    return deploy(application, null, null, appName);
+    return deploy(application, null, null, appName, null);
   }
 
   protected HttpResponse deploy(Class<?> application, @Nullable String apiVersion, @Nullable String namespace)
     throws Exception {
-    return deploy(application, apiVersion, namespace, null);
+    return deploy(application, apiVersion, namespace, null, null);
+  }
+
+  protected HttpResponse deploy(Class<?> application, @Nullable String apiVersion, @Nullable String namespace,
+                                @Nullable String appName) throws Exception {
+    return deploy(application, apiVersion, namespace, appName, null);
   }
 
   /**
-   * Deploys an application with (optionally) a defined app name
+   * Deploys an application with (optionally) a defined app name and app version
    */
   protected HttpResponse deploy(Class<?> application, @Nullable String apiVersion, @Nullable String namespace,
-                                       @Nullable String appName) throws Exception {
+                                       @Nullable String appName, @Nullable String appVersion) throws Exception {
     Manifest manifest = new Manifest();
     manifest.getMainAttributes().put(ManifestFields.MANIFEST_VERSION, "1.0");
     manifest.getMainAttributes().put(ManifestFields.MAIN_CLASS, application.getName());
+    if (appVersion != null) {
+      manifest.getMainAttributes().put(ManifestFields.BUNDLE_VERSION, appVersion);
+    }
 
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
     final JarOutputStream jarOut = new JarOutputStream(bos, manifest);
@@ -431,17 +444,17 @@ public abstract class AppFabricTestBase {
     return readResponse(response, typeToken);
   }
 
-  protected List<Map<String, String>> scheduleHistoryRuns(int retries, String url, int expected) throws Exception {
+  protected List<RunRecord> scheduleHistoryRuns(int retries, String url, int expected) throws Exception {
     int trial = 0;
     int workflowRuns = 0;
-    List<Map<String, String>> history;
+    List<RunRecord> history;
     String json;
     HttpResponse response;
     while (trial++ < retries) {
       response = doGet(url);
       Assert.assertEquals(200, response.getStatusLine().getStatusCode());
       json = EntityUtils.toString(response.getEntity());
-      history = new Gson().fromJson(json, LIST_MAP_STRING_STRING_TYPE);
+      history = new Gson().fromJson(json, LIST_RUNRECORD_TYPE);
       workflowRuns = history.size();
       if (workflowRuns > expected) {
         return history;
@@ -650,10 +663,45 @@ public abstract class AppFabricTestBase {
     }.getType());
   }
 
+  /**
+   * @deprecated Use {@link #getProgramRuns(Id.Program, String status)}.
+   */
+  @Deprecated
   protected int getRuns(String runsUrl) throws Exception {
     HttpResponse response = doGet(runsUrl);
     String json = EntityUtils.toString(response.getEntity());
-    List<Map<String, String>> history = GSON.fromJson(json, LIST_MAP_STRING_STRING_TYPE);
+    List<Map<String, String>> history = GSON.fromJson(json, LIST_RUNRECORD_TYPE);
     return history.size();
+  }
+
+  protected void verifyProgramRuns(final Id.Program program, final String status) throws Exception {
+    verifyProgramRuns(program, status, 0);
+  }
+
+  protected void verifyProgramRuns(final Id.Program program, final String status, final int expected)
+    throws Exception {
+    Tasks.waitFor(true, new Callable<Boolean>() {
+      @Override
+      public Boolean call() throws Exception {
+        return getProgramRuns(program, status).size() > expected;
+      }
+    }, 60, TimeUnit.SECONDS, 50, TimeUnit.MILLISECONDS);
+  }
+
+  protected List<RunRecord> getProgramRuns(Id.Program program, String status) throws Exception {
+    String path = String.format("apps/%s/%s/%s/runs?status=%s", program.getApplicationId(),
+                                program.getType().getCategoryName(), program.getId(), status);
+    HttpResponse response = doGet(getVersionedAPIPath(path, program.getNamespaceId()));
+    Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+    String json = EntityUtils.toString(response.getEntity());
+    return new Gson().fromJson(json, LIST_RUNRECORD_TYPE);
+  }
+
+  protected boolean datasetExists(Id.DatasetInstance datasetID) throws Exception {
+    return dsOpService.exists(datasetID);
+  }
+
+  protected boolean streamExists(Id.Stream streamID) throws Exception {
+    return streamAdmin.exists(streamID);
   }
 }

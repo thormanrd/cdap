@@ -1,123 +1,100 @@
 angular.module(PKG.name + '.feature.etlapps')
-  .controller('ETLAppsCreateController', function($scope, $filter) {
-    var filterFilter = $filter('filter');
-    $scope.displayName = 'ETL App 1';
-    $scope.description = '';
-    var i = 0;
-    $scope.mappedFields = [];
-    $scope.properties = [
+  .controller('ETLAppsCreateController', function($scope, MyDataSource) {
+    var dataSrc = new MyDataSource($scope);
+    $scope.loadingEtlSourceProps = false;
+    $scope.loadingEtlSinkProps = false;
+
+    $scope.etlTypes = [
       {
-        key: 'key1',
-        value: 'value1'
+        name: 'Etl Batch',
+        type: 'batch'
       },
       {
-        key: 'key2',
-        value: 'value2'
+        name: 'ETL Real Time',
+        type: 'realtime'
       }
     ];
-
-    $scope.addProperties = function() {
-      $scope.properties.push({
-        key: 'Property ' + i,
-        value: ''
-      });
-      i+=1;
-    };
-
-    $scope.removeProperty = function(property) {
-      var match = filterFilter($scope.properties, property);
-      if (match.length) {
-        $scope.properties.splice($scope.properties.indexOf(match[0]), 1);
-      }
-    };
-
-    $scope.types = [
-      {
-        name: 'Stream'
-      },
-      {
-        name: 'Dataset'
-      }
-    ];
-
-    $scope.filetypes = [
-      {
-        name: 'CSV'
-      },
-      {
-        name: 'AVRO'
-      }
-    ];
-
-    $scope.schema = {
-      fields: [
-        {
-          name: 'Field1',
-          type: 'text'
-        }
-      ]
-    };
-
-    $scope.outputSchema = {
-      fields: [
-        {
-          name: 'OutputField1',
-          type: 'text'
-        }
-      ]
-    };
-
-    $scope.addSchemaFields = function() {
-      $scope.schema.fields.push({
-        name: 'Field' + Date.now(),
+    $scope.metadata = {
+        name: '',
+        description: '',
         type: ''
-      });
     };
 
-    $scope.removeSchemaField = function(field) {
-      var matchIndex,
-          value;
+    $scope.$watch('metadata.type',fetchSources)
 
-      for (var i =0; i<$scope.schema.fields.length; i++) {
-        value = $scope.schema.fields[i];
-        if (value.name === field.name) {
-          matchIndex = i;
-          break;
-        }
-      }
-      if (matchIndex) {
-        $scope.schema.fields.splice(matchIndex, 1);
-      }
+    function fetchSources(etlType) {
+      if (!etlType) return;
+      console.log("ETLType: ", etlType);
+      dataSrc.request({
+        _cdapPath: '/templates/etl.' + etlType + '/sources'
+      })
+        .then(function(res) {
+          $scope.etlSources = res;
+        });
+      fetchSinks(etlType);
+      fetchTransforms(etlType);
     }
 
-    $scope.addOutputSchemaFields = function() {
-      $scope.outputSchema.fields.push({
-        name: 'OuputField' + Date.now(),
-        type: ''
-      });
-    };
-
-    $scope.removeOutputSchemaField = function(field) {
-      var matchIndex,
-          value;
-
-      for (var i =0; i<$scope.outputSchema.fields.length; i++) {
-        value = $scope.outputSchema.fields[i];
-        if (value.name === field.name) {
-          matchIndex = i;
-          break;
-        }
-      }
-      if (matchIndex) {
-        $scope.outputSchema.fields.splice(matchIndex, 1);
-      }
-    };
-
-    $scope.addMappedFields = function() {
-      $scope.mappedFields.push({
-        fromField: "",
-        toField: ""
+    function fetchSinks(etlType) {
+      dataSrc.request({
+        _cdapPath: '/templates/etl.'+ etlType + '/sinks'
       })
+        .then(function(res) {
+          $scope.etlSinks = res;
+        });
+    }
+
+    function fetchTransforms(etlType) {
+      dataSrc.request({
+        _cdapPath: '/templates/etl.' + etlType + '/transforms'
+      })
+        .then(function(res) {
+          $scope.etlTransforms = res;
+        });
+    }
+
+    $scope.source = {
+      name: '',
+      properties: {}
     };
+
+    $scope.$watch('source.name', fetchSourceProperties);
+
+    function fetchSourceProperties(etlSource) {
+      if (!etlSource) return;
+      console.log("ETLSource: ", etlSource);
+      dataSrc.request({
+        _cdapPath: '/templates/etl.' + $scope.metadata.type + '/sources/' + etlSource
+      })
+        .then(function(res) {
+          console.log("Source Name:", etlSource, "Properties:", res);
+        });
+      $scope.loadingEtlSourceProps = etlSource || false;
+    }
+
+    $scope.sink = {
+      name: '',
+      properties: {}
+    };
+
+    $scope.$watch('sink.name', fetchSinkProperties);
+
+    function fetchSinkProperties(etlSink){
+      if (!etlSink) return;
+      console.log("Sink: ", etlSink);
+      dataSrc.request({
+        _cdapPath: '/templates/etl.' + $scope.metadata.type + '/sinks/' + etlSink
+      })
+        .then(function(res) {
+          console.log("Sink Name:", etlSink, "Properties:", res);
+        });
+      $scope.loadingEtlSinkProps = etlSink || false;
+    }
+
+    $scope.transforms = [];
+
+    $scope.$watchCollection('transforms', function(newVal) {
+      console.log("Transform Collection Watch", newVal);
+    })
 
   });

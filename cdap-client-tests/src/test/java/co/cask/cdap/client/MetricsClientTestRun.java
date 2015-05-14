@@ -20,7 +20,6 @@ import co.cask.cdap.client.app.FakeApp;
 import co.cask.cdap.client.app.FakeFlow;
 import co.cask.cdap.client.common.ClientTestBase;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.metrics.MetricsContexts;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.MetricQueryResult;
 import co.cask.cdap.proto.MetricTagValue;
@@ -70,15 +69,11 @@ public class MetricsClientTestRun extends ClientTestBase {
       Id.Program programId = Id.Program.from(appId, ProgramType.FLOW, FakeFlow.NAME);
       String flowlet = FakeFlow.FLOWLET_NAME;
 
-      MetricQueryResult result = metricsClient.query(Constants.Metrics.Name.Flow.FLOWLET_INPUT,
-                                                     MetricsContexts.forFlowlet(programId, flowlet));
-      Assert.assertEquals(1, result.getSeries()[0].getData()[0].getValue());
-
-      result = metricsClient.query(
+      MetricQueryResult result = metricsClient.query(
         ImmutableList.of(Constants.Metrics.Name.Flow.FLOWLET_INPUT),
         ImmutableList.<String>of(),
         ImmutableList.of(
-         "namespace:" + programId.getNamespaceId(),
+          "namespace:" + programId.getNamespaceId(),
           "app:" + programId.getApplicationId(),
           "flow:" + programId.getId(),
           "flowlet:" + flowlet));

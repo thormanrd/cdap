@@ -62,14 +62,14 @@ public class MetricsClient {
   }
 
   /**
-   * Searches for metrics matching the given tags.
+   * Searches for metrics tags matching the given tags.
    *
    * @param tags the tags to match
    * @return the metrics matching the given tags
    * @throws IOException if a network error occurred
    * @throws UnauthorizedException if the request is not authorized successfully in the gateway server
    */
-  public List<MetricTagValue> search(List<String> tags)
+  public List<MetricTagValue> searchTags(List<String> tags)
     throws IOException, UnauthorizedException {
 
     List<String> queryParts = Lists.newArrayList();
@@ -82,6 +82,30 @@ public class MetricsClient {
     HttpResponse response = restClient.execute(HttpMethod.POST, url, config.getAccessToken());
     ObjectResponse<List<MetricTagValue>> result = ObjectResponse.fromJsonBody(
       response, new TypeToken<List<MetricTagValue>>() { }.getType());
+    return result.getResponseObject();
+  }
+
+  /**
+   * Searches for metrics matching the given tags.
+   *
+   * @param tags the tags to match
+   * @return the metrics matching the given tags
+   * @throws IOException if a network error occurred
+   * @throws UnauthorizedException if the request is not authorized successfully in the gateway server
+   */
+  public List<String> searchMetrics(List<String> tags)
+    throws IOException, UnauthorizedException {
+
+    List<String> queryParts = Lists.newArrayList();
+    queryParts.add("target=metric");
+    for (String tag : tags) {
+      queryParts.add("tag=" + tag);
+    }
+
+    URL url = config.resolveURLV3(String.format("metrics/search?%s", Joiner.on("&").join(queryParts)));
+    HttpResponse response = restClient.execute(HttpMethod.POST, url, config.getAccessToken());
+    ObjectResponse<List<String>> result = ObjectResponse.fromJsonBody(
+      response, new TypeToken<List<String>>() { }.getType());
     return result.getResponseObject();
   }
 

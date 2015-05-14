@@ -79,14 +79,22 @@ public class MetricsClientTestRun extends ClientTestBase {
           "flowlet:" + flowlet));
       Assert.assertEquals(1, result.getSeries()[0].getData()[0].getValue());
 
-      List<MetricTagValue> searchResults = metricsClient.search(
+      List<MetricTagValue> tags = metricsClient.searchTags(
         ImmutableList.of(
           "namespace:" + programId.getNamespaceId(),
           "app:" + programId.getApplicationId(),
           "flow:" + programId.getId(),
           "flowlet:" + flowlet));
-      Assert.assertEquals(1, searchResults.size());
-      Assert.assertEquals("run", searchResults.get(0).getName());
+      Assert.assertEquals(1, tags.size());
+      Assert.assertEquals("run", tags.get(0).getName());
+
+      List<String> metrics = metricsClient.searchMetrics(
+        ImmutableList.of(
+          "namespace:" + programId.getNamespaceId(),
+          "app:" + programId.getApplicationId(),
+          "flow:" + programId.getId(),
+          "flowlet:" + flowlet));
+      Assert.assertTrue(metrics.contains(Constants.Metrics.Name.Flow.FLOWLET_INPUT));
     } finally {
       programClient.stop(FakeApp.NAME, ProgramType.FLOW, FakeFlow.NAME);
       appClient.delete(FakeApp.NAME);

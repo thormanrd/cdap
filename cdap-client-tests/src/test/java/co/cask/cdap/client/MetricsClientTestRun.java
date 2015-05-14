@@ -23,13 +23,16 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.metrics.MetricsContexts;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.MetricQueryResult;
+import co.cask.cdap.proto.MetricTagValue;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.test.XSlowTests;
+import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -71,7 +74,24 @@ public class MetricsClientTestRun extends ClientTestBase {
                                                      MetricsContexts.forFlowlet(programId, flowlet));
       Assert.assertEquals(1, result.getSeries()[0].getData()[0].getValue());
 
-      // TODO: more tests
+      result = metricsClient.query(
+        ImmutableList.of(Constants.Metrics.Name.Flow.FLOWLET_INPUT),
+        ImmutableList.<String>of(),
+        ImmutableList.of(
+         "namespace:" + programId.getNamespaceId(),
+          "app:" + programId.getApplicationId(),
+          "flow:" + programId.getId(),
+          "flowlet:" + flowlet));
+      Assert.assertEquals(1, result.getSeries()[0].getData()[0].getValue());
+
+      List<MetricTagValue> searchResults = metricsClient.search(
+        ImmutableList.of(
+          "namespace:" + programId.getNamespaceId(),
+          "app:" + programId.getApplicationId(),
+          "flow:" + programId.getId(),
+          "flowlet:" + flowlet));
+      Assert.assertEquals(1, searchResults.size());
+      Assert.assertEquals("run", searchResults.get(0).getName());
     } finally {
       programClient.stop(FakeApp.NAME, ProgramType.FLOW, FakeFlow.NAME);
       appClient.delete(FakeApp.NAME);

@@ -24,15 +24,19 @@ import co.cask.cdap.common.exception.UnauthorizedException;
 import co.cask.cdap.common.metrics.MetricsContexts;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.MetricQueryResult;
+import co.cask.cdap.proto.MetricTagValue;
 import co.cask.common.http.HttpMethod;
 import co.cask.common.http.HttpResponse;
 import co.cask.common.http.ObjectResponse;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -59,6 +63,62 @@ public class MetricsClient {
   }
 
   /**
+   * Searches for metrics matching the given tags.
+   *
+   * @param tags the tags to match
+   * @return the metrics matching the given tags
+   * @throws IOException if a network error occurred
+   * @throws UnauthorizedException if the request is not authorized successfully in the gateway server
+   */
+  public List<MetricTagValue> search(List<String> tags)
+    throws IOException, UnauthorizedException {
+
+    List<String> queryParts = Lists.newArrayList();
+    queryParts.add("target=tag");
+    for (String tag : tags) {
+      queryParts.add("tag=" + tag);
+    }
+
+    URL url = config.resolveURLV3(String.format("metrics/search?%s", Joiner.on("&").join(queryParts)));
+    HttpResponse response = restClient.execute(HttpMethod.POST, url, config.getAccessToken());
+    ObjectResponse<List<MetricTagValue>> result = ObjectResponse.fromJsonBody(
+      response, new TypeToken<List<MetricTagValue>>() { }.getType());
+    return result.getResponseObject();
+  }
+
+  /**
+   * Gets the value of the given metrics.
+   *
+   * @param metrics names of the metrics
+   * @param groupBys groupBys for the request
+   * @param tags tags for the request
+   * @return values of the metrics
+   * @throws IOException if a network error occurred
+   * @throws UnauthorizedException if the request is not authorized successfully in the gateway server
+   */
+  public MetricQueryResult query(List<String> metrics, List<String> groupBys, List<String> tags)
+    throws IOException, UnauthorizedException {
+
+    List<String> queryParts = Lists.newArrayList();
+    queryParts.add("target=tag");
+    for (String metric : metrics) {
+      queryParts.add("metric=" + metric);
+    }
+    for (String groupBy : groupBys) {
+      queryParts.add("groupBy=" + groupBy);
+    }
+    for (String tag : tags) {
+      queryParts.add("tag=" + tag);
+    }
+
+    URL url = config.resolveURLV3(String.format("metrics/query?%s", Joiner.on("&").join(queryParts)));
+    HttpResponse response = restClient.execute(HttpMethod.POST, url, config.getAccessToken());
+    return ObjectResponse.fromJsonBody(response, MetricQueryResult.class).getResponseObject();
+  }
+
+  /**
+   * @deprecated As of 3.1.0, replaced by {@link #query}
+   *
    * Gets the value of a particular metric.
    *
    * @param metric name of the metric
@@ -68,6 +128,7 @@ public class MetricsClient {
    * @throws IOException if a network error occurred
    * @throws UnauthorizedException if the request is not authorized successfully in the gateway server
    */
+  @Deprecated
   public MetricQueryResult query(String metric, @Nullable Map<String, String> context,
                                  @Nullable String start, @Nullable String end, @Nullable String groupBy)
     throws IOException, UnauthorizedException {
@@ -81,11 +142,13 @@ public class MetricsClient {
     return ObjectResponse.fromJsonBody(response, MetricQueryResult.class).getResponseObject();
   }
 
+  @Deprecated
   public MetricQueryResult query(String metric, Map<String, String> context)
     throws IOException, UnauthorizedException {
     return query(metric, context, null, null, null);
   }
 
+  @Deprecated
   public MetricQueryResult query(String metric) throws IOException, UnauthorizedException {
     return query(metric, null, null, null, null);
   }

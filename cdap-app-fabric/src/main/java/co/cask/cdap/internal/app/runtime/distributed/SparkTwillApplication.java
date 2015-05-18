@@ -42,7 +42,7 @@ import java.util.Set;
 public final class SparkTwillApplication implements TwillApplication {
 
   static final File SPARK_JAR_FILE =
-    new File("/usr/lib/spark/lib/spark-assembly-1.2.0-cdh5.3.0-hadoop2.5.0-cdh5.3.0.jar");
+    new File("/home/rsinha/spark-1.3.1/assembly/target/scala-2.10/spark-assembly-1.3.1-hadoop2.4.0.jar");
 
   private final SparkSpecification spec;
   private final Program program;

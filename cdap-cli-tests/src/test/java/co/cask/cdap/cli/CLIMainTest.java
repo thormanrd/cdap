@@ -176,6 +176,15 @@ public class CLIMainTest extends StandaloneTestBase {
   }
 
   @Test
+  public void testPrompt() throws Exception {
+    String prompt = cliMain.getPrompt(clientConfig);
+    Assert.assertTrue(prompt.contains(System.getProperty("user.name")));
+    Assert.assertTrue(prompt.contains(HOSTNAME));
+    Assert.assertTrue(prompt.contains(String.valueOf(PORT)));
+    Assert.assertTrue(prompt.contains(cliConfig.getCurrentNamespace().getId()));
+  }
+
+  @Test
   public void testProgram() throws Exception {
     String flowId = FakeApp.FLOWS.get(0);
     String qualifiedFlowId = FakeApp.NAME + "." + flowId;

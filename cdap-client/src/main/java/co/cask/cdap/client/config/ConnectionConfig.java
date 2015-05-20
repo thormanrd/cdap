@@ -58,6 +58,7 @@ public class ConnectionConfig {
   private final int port;
   private final boolean sslEnabled;
   private final Id.Namespace namespace;
+  private final String username;
 
   public ConnectionConfig(Id.Namespace namespace, String hostname, int port, boolean sslEnabled) {
     Preconditions.checkArgument(namespace != null, "namespace cannot be empty");
@@ -66,10 +67,11 @@ public class ConnectionConfig {
     this.hostname = hostname;
     this.port = port;
     this.sslEnabled = sslEnabled;
+    this.username = System.getProperty("user.name");
   }
 
   public URI getURI() {
-    return URI.create(String.format("%s://%s:%d", sslEnabled ? "https" : "http", hostname, port));
+    return URI.create(String.format("%s://%s@%s:%d", sslEnabled ? "https" : "http", username, hostname, port));
   }
 
   public URI resolveURI(String path) {
@@ -123,6 +125,7 @@ public class ConnectionConfig {
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
+      .add("username", username)
       .add("hostname", hostname)
       .add("port", port)
       .add("sslEnabled", sslEnabled)

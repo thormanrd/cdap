@@ -179,8 +179,9 @@ public class CLIMainTest extends StandaloneTestBase {
   @Test
   public void testPrompt() throws Exception {
     SecurityRequestContext.setUserId("test-username");
-    ClientConfig clientConfig = new ClientConfig.Builder().setConnectionConfig(ConnectionConfig.builder().setSSLEnabled(true).build()).build();
-    CLIConfig cliPrompt = new CLIConfig(clientConfig, System.out, new CsvTableRenderer());
+    ClientConfig.Builder builder = new ClientConfig.Builder();
+    builder.setConnectionConfig(ConnectionConfig.builder().setSSLEnabled(true).build());
+    CLIConfig cliPrompt = new CLIConfig(builder.build(), System.out, new CsvTableRenderer());
     String prompt = cliMain.getPrompt(cliPrompt.getClientConfig());
     Assert.assertTrue(prompt.contains("test-username@"));
     Assert.assertTrue(prompt.contains(HOSTNAME));

@@ -17,6 +17,7 @@ package co.cask.cdap.client.config;
 
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.http.SecurityRequestContext;
 import co.cask.cdap.proto.Id;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -67,11 +68,15 @@ public class ConnectionConfig {
     this.hostname = hostname;
     this.port = port;
     this.sslEnabled = sslEnabled;
-    this.username = System.getProperty("user.name");
+    if (SecurityRequestContext.getUserId().isPresent()) {
+      this.username = SecurityRequestContext.getUserId().get() + "@";
+    } else {
+      this.username = "";
+    }
   }
 
   public URI getURI() {
-    return URI.create(String.format("%s://%s@%s:%d", sslEnabled ? "https" : "http", username, hostname, port));
+    return URI.create(String.format("%s://%s%s:%d", sslEnabled ? "https" : "http", username, hostname, port));
   }
 
   public URI resolveURI(String path) {
@@ -88,6 +93,10 @@ public class ConnectionConfig {
 
   public Id.Namespace getNamespace() {
     return namespace;
+  }
+
+  public String getUsername() {
+    return username;
   }
 
   public String getHostname() {

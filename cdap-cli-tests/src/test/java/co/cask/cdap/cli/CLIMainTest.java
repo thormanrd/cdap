@@ -40,6 +40,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.exception.DatasetTypeNotFoundException;
 import co.cask.cdap.common.exception.ProgramNotFoundException;
 import co.cask.cdap.common.exception.UnauthorizedException;
+import co.cask.cdap.common.http.SecurityRequestContext;
 import co.cask.cdap.common.io.Locations;
 import co.cask.cdap.common.utils.DirUtils;
 import co.cask.cdap.internal.test.AppJarHelper;
@@ -177,11 +178,14 @@ public class CLIMainTest extends StandaloneTestBase {
 
   @Test
   public void testPrompt() throws Exception {
-    String prompt = cliMain.getPrompt(clientConfig);
-    Assert.assertTrue(prompt.contains(System.getProperty("user.name")));
+    SecurityRequestContext.setUserId("test-username");
+    ClientConfig clientConfig = new ClientConfig.Builder().setConnectionConfig(ConnectionConfig.builder().setSSLEnabled(true).build()).build();
+    CLIConfig cliPrompt = new CLIConfig(clientConfig, System.out, new CsvTableRenderer());
+    String prompt = cliMain.getPrompt(cliPrompt.getClientConfig());
+    Assert.assertTrue(prompt.contains("test-username@"));
     Assert.assertTrue(prompt.contains(HOSTNAME));
-    Assert.assertTrue(prompt.contains(String.valueOf(PORT)));
-    Assert.assertTrue(prompt.contains(cliConfig.getCurrentNamespace().getId()));
+    Assert.assertTrue(prompt.contains(cliPrompt.getCurrentNamespace().getId()));
+
   }
 
   @Test

@@ -115,7 +115,6 @@ public final class StreamFetchHandler extends AuthenticatedHttpHandler {
     if (!verifyGetEventsRequest(streamId, startTime, endTime, limit, responder)) {
       return;
     }
-
     StreamConfig streamConfig = streamAdmin.getConfig(streamId);
     long now = System.currentTimeMillis();
     startTime = Math.max(startTime, now - streamConfig.getTTL());

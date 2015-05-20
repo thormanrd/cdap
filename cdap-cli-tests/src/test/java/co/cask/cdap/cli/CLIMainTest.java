@@ -186,7 +186,6 @@ public class CLIMainTest extends StandaloneTestBase {
     Assert.assertTrue(prompt.contains("test-username@"));
     Assert.assertTrue(prompt.contains(HOSTNAME));
     Assert.assertTrue(prompt.contains(cliPrompt.getCurrentNamespace().getId()));
-
   }
 
   @Test
